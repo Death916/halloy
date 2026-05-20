@@ -2123,6 +2123,17 @@ fn handle_priv_or_notice(
         }
     }
 
+    let mut chan_msg = msg.clone();
+    if let message::Target::Channel {
+        channel, source, ..
+    } = &chan_msg.target
+    {
+        chan_msg.target = message::Target::ChannelMonitor {
+            server: server.clone(),
+            channel: channel.clone(),
+            source: source.clone(),
+        };
+    }
     commands.push(
         dashboard
             .record_message(
@@ -2131,6 +2142,11 @@ fn handle_priv_or_notice(
                 labeled_response_context,
                 &config.buffer,
             )
+            .map(Message::Dashboard),
+    );
+    commands.push(
+        dashboard
+            .record_channel_monitor(chan_msg)
             .map(Message::Dashboard),
     );
 
